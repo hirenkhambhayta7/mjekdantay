@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load product_tags %}
+
+{% block title %}Shop — MJ Ekdantay Masala Centre{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb-custom">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'products:home' %}">Home</a></li>
+            <li class="breadcrumb-item active">Shop</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3 mb-4">
+            <div class="shop-sidebar">
+                <h6><i class="bi bi-funnel me-2"></i>Categories</h6>
+                <form id="filter-form" method="GET" action="{% url 'products:shop' %}">
+                    {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+                    {% for cat in categories %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="category" value="{{ cat.slug }}"
+                               id="cat-{{ cat.slug }}" {% if cat.slug in selected_categories %}checked{% endif %}
+                               onchange="document.getElementById('filter-form').submit();">
+                        <label class="form-check-label" for="cat-{{ cat.slug }}">
+                            {{ cat.name }}
+                            <small class="text-muted">({{ cat.products.count }})</small>
+                        </label>
+                    </div>
+                    {% endfor %}
+
+                    <h6 class="mt-4"><i class="bi bi-sort-down me-2"></i>Sort By</h6>
+                    <select class="form-select form-select-sm" name="sort" onchange="document.getElementById('filter-form').submit();">
+                        <option value="">Default</option>
+                        <option value="price_low" {% if sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                        <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                        <option value="name" {% if sort == 'name' %}selected{% endif %}>Name: A–Z</option>
+                    </select>
+                </form>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="col-lg-9">
+            {% if query %}
+            <div class="mb-3">
+                <p class="text-muted">Showing results for "<strong>{{ query }}</strong>" — {{ products|length }} product{{ products|length|pluralize }}</p>
+            </div>
+            {% endif %}
+
+            {% if products %}
+            <div class="row g-4">
+                {% for product in products %}
+                <div class="col-lg-4 col-md-4 col-6">
+                    <div class="product-card">
+                        <a href="{{ product.get_absolute_url }}">
+                            <div class="product-image-wrapper">
+                                <span class="category-tag">{{ product.category.name }}</span>
+                                {% if product.image %}
+                                <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                                {% else %}
+                                <div class="placeholder-image">🌿</div>
+                                {% endif %}
+                            </div>
+                        </a>
+                        <div class="product-info">
+                            <h6 class="product-name">
+                                <a href="{{ product.get_absolute_url }}">{{ product.name }}</a>
+                            </h6>
+                            <div class="variant-pills">
+                                {% for variant in product.variants.all %}
+                                <span class="variant-pill card-variant-pill {% if forloop.first %}active{% endif %}"
+                                      data-price="{{ variant.price }}"
+                                      data-variant-id="{{ variant.id }}">{{ variant.weight_label }}</span>
+                                {% endfor %}
+                            </div>
+                            {% with product.default_variant as dv %}
+                            {% if dv %}
+                            <div class="product-price">
+                                <span class="card-price-value">₹{{ dv.price }}</span>
+                                <small>onwards</small>
+                            </div>
+                            <form class="add-to-cart-form" action="{% url 'orders:add_to_cart' %}" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="variant_id" class="card-variant-input" value="{{ dv.id }}">
+                                <input type="hidden" name="quantity" value="1">
+                                <button type="submit" class="btn-cart">
+                                    <i class="bi bi-bag-plus me-1"></i>Add to Cart
+                                </button>
+                            </form>
+                            {% endif %}
+                            {% endwith %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">🔍</div>
+                <h4>No products found</h4>
+                <p>Try adjusting your filters or search terms</p>
+                <a href="{% url 'products:shop' %}" class="btn btn-primary-custom">Clear Filters</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends 'store_admin/base_admin.html' %}
+
+{% block title %}Customers{% endblock %}
+
+{% block content %}
+<div class="admin-page-header">
+    <h1 class="admin-page-title">Customers</h1>
+    <p class="admin-page-subtitle">All registered customers</p>
+</div>
+
+<!-- Search -->
+<div class="admin-card mb-4">
+    <div class="admin-card-body">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label small fw-semibold">Search</label>
+                <input type="text" name="q" class="form-control" placeholder="Name, email..." value="{{ search }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary-custom w-100">
+                    <i class="bi bi-search me-1"></i>Search
+                </button>
+            </div>
+            {% if search %}
+            <div class="col-md-2">
+                <a href="{% url 'store_admin:customers' %}" class="btn btn-outline-secondary w-100">Clear</a>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<!-- Customers Table -->
+<div class="admin-card">
+    <div class="admin-card-body p-0">
+        <div class="table-responsive">
+            <table class="table admin-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Email</th>
+                        <th>Joined</th>
+                        <th>Orders</th>
+                        <th>Total Spent</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in customers %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="admin-avatar">
+                                    {{ customer.first_name|first|default:"?" }}
+                                </div>
+                                <span class="fw-semibold">{{ customer.get_full_name|default:"—" }}</span>
+                            </div>
+                        </td>
+                        <td class="text-muted">{{ customer.email }}</td>
+                        <td class="text-muted small">{{ customer.date_joined|date:"d M Y" }}</td>
+                        <td><span class="badge bg-secondary">{{ customer.order_count }}</span></td>
+                        <td class="fw-semibold">₹{{ customer.total_spent|default:0|floatformat:0 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="bi bi-people fs-1 d-block mb-2"></i>
+                                No customers found
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

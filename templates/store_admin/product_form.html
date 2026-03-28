@@ -1,0 +1,189 @@
+{% extends 'store_admin/base_admin.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="admin-page-header">
+    <a href="{% url 'store_admin:products_list' %}" class="text-decoration-none small">
+        <i class="bi bi-arrow-left me-1"></i>Back to Products
+    </a>
+    <h1 class="admin-page-title mt-1">{{ title }}</h1>
+</div>
+
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="row g-4">
+        <!-- Product Details -->
+        <div class="col-lg-8">
+            <div class="admin-card mb-4">
+                <div class="admin-card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Product Details</h5>
+                </div>
+                <div class="admin-card-body">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label fw-semibold">Product Name</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Slug</label>
+                            {{ form.slug }}
+                            {% if form.slug.errors %}<div class="text-danger small mt-1">{{ form.slug.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Description</label>
+                            {{ form.description }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Ingredients</label>
+                            {{ form.ingredients }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Usage Info</label>
+                            {{ form.usage_info }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Variants -->
+            <div class="admin-card">
+                <div class="admin-card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-stack me-2"></i>Variants (Weight / Size)</h5>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addVariantRow()">
+                        <i class="bi bi-plus-lg me-1"></i>Add Variant
+                    </button>
+                </div>
+                <div class="admin-card-body p-0">
+                    {{ formset.management_form }}
+                    <div class="table-responsive">
+                        <table class="table admin-table mb-0" id="variant-table">
+                            <thead>
+                                <tr>
+                                    <th>Weight / Label</th>
+                                    <th>Price (₹)</th>
+                                    <th>Stock Qty</th>
+                                    <th width="60">Delete</th>
+                                </tr>
+                            </thead>
+                            <tbody id="variant-rows">
+                                {% for vform in formset %}
+                                <tr class="variant-row">
+                                    <td>
+                                        {{ vform.id }}
+                                        {{ vform.weight_label }}
+                                        {% if vform.weight_label.errors %}<div class="text-danger small">{{ vform.weight_label.errors.0 }}</div>{% endif %}
+                                    </td>
+                                    <td>
+                                        {{ vform.price }}
+                                        {% if vform.price.errors %}<div class="text-danger small">{{ vform.price.errors.0 }}</div>{% endif %}
+                                    </td>
+                                    <td>
+                                        {{ vform.stock_quantity }}
+                                        {% if vform.stock_quantity.errors %}<div class="text-danger small">{{ vform.stock_quantity.errors.0 }}</div>{% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if vform.instance.pk %}
+                                        <div class="form-check d-flex justify-content-center">
+                                            {{ vform.DELETE }}
+                                        </div>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="admin-card mb-4">
+                <div class="admin-card-header">
+                    <h5 class="mb-0"><i class="bi bi-sliders me-2"></i>Settings</h5>
+                </div>
+                <div class="admin-card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Category</label>
+                        {{ form.category }}
+                        {% if form.category.errors %}<div class="text-danger small">{{ form.category.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Base Price (₹)</label>
+                        {{ form.base_price }}
+                        {% if form.base_price.errors %}<div class="text-danger small">{{ form.base_price.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            {{ form.is_active }}
+                            <label class="form-check-label fw-semibold ms-2">Active</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            {{ form.is_featured }}
+                            <label class="form-check-label fw-semibold ms-2">Featured</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-card mb-4">
+                <div class="admin-card-header">
+                    <h5 class="mb-0"><i class="bi bi-image me-2"></i>Product Image</h5>
+                </div>
+                <div class="admin-card-body">
+                    {% if product and product.image %}
+                    <div class="mb-3">
+                        <img src="{{ product.image.url }}" alt="" class="img-fluid rounded" style="max-height: 200px;">
+                    </div>
+                    {% endif %}
+                    {{ form.image }}
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary-custom w-100 btn-lg">
+                <i class="bi bi-check-lg me-2"></i>Save Product
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function addVariantRow() {
+    const totalForms = document.getElementById('id_variants-TOTAL_FORMS');
+    const currentCount = parseInt(totalForms.value);
+    const tbody = document.getElementById('variant-rows');
+
+    const template = `
+        <tr class="variant-row">
+            <td><input type="hidden" name="variants-${currentCount}-id" id="id_variants-${currentCount}-id"><input type="text" name="variants-${currentCount}-weight_label" class="form-control" placeholder="e.g. 100g" id="id_variants-${currentCount}-weight_label"></td>
+            <td><input type="number" name="variants-${currentCount}-price" step="0.01" class="form-control" placeholder="0.00" id="id_variants-${currentCount}-price"></td>
+            <td><input type="number" name="variants-${currentCount}-stock_quantity" class="form-control" placeholder="0" id="id_variants-${currentCount}-stock_quantity"></td>
+            <td></td>
+        </tr>
+    `;
+    tbody.insertAdjacentHTML('beforeend', template);
+    totalForms.value = currentCount + 1;
+}
+
+// Auto-generate slug from name
+const nameInput = document.querySelector('#id_name');
+const slugInput = document.querySelector('#id_slug');
+if (nameInput && slugInput && !slugInput.value) {
+    nameInput.addEventListener('input', function() {
+        slugInput.value = this.value
+            .toLowerCase()
+            .replace(/[^\w\s-]/g, '')
+            .replace(/[\s_]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+    });
+}
+</script>
+{% endblock %}

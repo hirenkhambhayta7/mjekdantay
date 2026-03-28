@@ -1,0 +1,182 @@
+{% extends 'store_admin/base_admin.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">Dashboard</h1>
+        <p class="admin-page-subtitle">Welcome back! Here's your store overview.</p>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon revenue">
+                <i class="bi bi-currency-rupee"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Total Revenue</span>
+                <span class="stat-value">₹{{ total_revenue|floatformat:0 }}</span>
+                <span class="stat-detail">All time</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon orders">
+                <i class="bi bi-receipt"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Total Orders</span>
+                <span class="stat-value">{{ total_orders }}</span>
+                <span class="stat-detail">{{ month_orders }} this month</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon pending">
+                <i class="bi bi-clock-history"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Pending</span>
+                <span class="stat-value">{{ pending_orders }}</span>
+                <span class="stat-detail">{{ processing_orders }} processing</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon products">
+                <i class="bi bi-box-seam"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Active Products</span>
+                <span class="stat-value">{{ total_products }}</span>
+                <span class="stat-detail">{{ total_categories }} categories</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Month Revenue + Top Products -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-7">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5><i class="bi bi-graph-up me-2"></i>This Month</h5>
+            </div>
+            <div class="admin-card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="month-stat">
+                            <span class="month-stat-value">₹{{ month_revenue|floatformat:0 }}</span>
+                            <span class="month-stat-label">Revenue (30 days)</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="month-stat">
+                            <span class="month-stat-value">{{ month_orders }}</span>
+                            <span class="month-stat-label">Orders (30 days)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5><i class="bi bi-trophy me-2"></i>Top Selling</h5>
+            </div>
+            <div class="admin-card-body p-0">
+                {% if top_products %}
+                <ul class="top-products-list">
+                    {% for item in top_products %}
+                    <li>
+                        <span class="top-rank">#{{ forloop.counter }}</span>
+                        <span class="top-name">{{ item.product_name }}</span>
+                        <span class="top-qty">{{ item.total_sold }} sold</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted text-center py-3 mb-0">No sales yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Low Stock + Recent Orders -->
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5><i class="bi bi-exclamation-triangle me-2"></i>Low Stock Alerts</h5>
+            </div>
+            <div class="admin-card-body p-0">
+                {% if low_stock %}
+                <div class="table-responsive">
+                    <table class="table admin-table mb-0">
+                        <thead>
+                            <tr><th>Product</th><th>Variant</th><th>Stock</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for v in low_stock %}
+                            <tr>
+                                <td class="fw-semibold">{{ v.product.name }}</td>
+                                <td>{{ v.weight_label }}</td>
+                                <td>
+                                    {% if v.stock_quantity == 0 %}
+                                    <span class="badge bg-danger">OUT</span>
+                                    {% else %}
+                                    <span class="badge bg-warning text-dark">{{ v.stock_quantity }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3 mb-0"><i class="bi bi-check-circle me-1"></i>All stock levels healthy</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="admin-card">
+            <div class="admin-card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-clock me-2"></i>Recent Orders</h5>
+                <a href="{% url 'store_admin:orders_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="admin-card-body p-0">
+                <div class="table-responsive">
+                    <table class="table admin-table mb-0">
+                        <thead>
+                            <tr><th>#</th><th>Customer</th><th>Amount</th><th>Status</th><th>Date</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td><a href="{% url 'store_admin:order_detail' order.id %}" class="fw-bold text-decoration-none">#{{ order.id }}</a></td>
+                                <td>{{ order.customer.get_full_name|default:order.customer.email }}</td>
+                                <td class="fw-semibold">₹{{ order.total_amount }}</td>
+                                <td><span class="admin-status-badge status-{{ order.status }}">{{ order.get_status_display }}</span></td>
+                                <td class="text-muted small">{{ order.created_at|date:"d M, H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center text-muted py-3">No orders yet</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

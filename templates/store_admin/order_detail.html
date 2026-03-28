@@ -1,0 +1,141 @@
+{% extends 'store_admin/base_admin.html' %}
+
+{% block title %}Order #{{ order.id }}{% endblock %}
+
+{% block content %}
+<div class="admin-page-header d-flex justify-content-between align-items-start flex-wrap gap-3">
+    <div>
+        <a href="{% url 'store_admin:orders_list' %}" class="text-decoration-none small">
+            <i class="bi bi-arrow-left me-1"></i>Back to Orders
+        </a>
+        <h1 class="admin-page-title mt-1">Order #{{ order.id }}</h1>
+        <p class="admin-page-subtitle">Placed on {{ order.created_at|date:"d M Y, h:i A" }}</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <span class="admin-status-badge status-{{ order.status }} fs-6">{{ order.get_status_display }}</span>
+        <span class="admin-status-badge status-{{ order.payment_status }} fs-6">{{ order.get_payment_status_display }}</span>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Order Items -->
+    <div class="col-lg-8">
+        <div class="admin-card mb-4">
+            <div class="admin-card-header">
+                <h5 class="mb-0"><i class="bi bi-bag me-2"></i>Order Items</h5>
+            </div>
+            <div class="admin-card-body p-0">
+                <div class="table-responsive">
+                    <table class="table admin-table mb-0">
+                        <thead>
+                            <tr><th>Product</th><th>Variant</th><th>Price</th><th>Qty</th><th class="text-end">Total</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.order_items.all %}
+                            <tr>
+                                <td class="fw-semibold">{{ item.product_name }}</td>
+                                <td>{{ item.variant_label }}</td>
+                                <td>₹{{ item.price_at_purchase }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td class="text-end fw-bold">₹{{ item.total_price }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="4" class="text-end fw-semibold">Subtotal</td>
+                                <td class="text-end fw-semibold">₹{{ order.items_total }}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="4" class="text-end">Delivery</td>
+                                <td class="text-end">{% if order.delivery_charge > 0 %}₹{{ order.delivery_charge }}{% else %}<span class="text-success">FREE</span>{% endif %}</td>
+                            </tr>
+                            <tr class="table-active">
+                                <td colspan="4" class="text-end fw-bold fs-5">Grand Total</td>
+                                <td class="text-end fw-bold fs-5" style="color: var(--primary);">₹{{ order.total_amount }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delivery Address -->
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Delivery Address</h5>
+            </div>
+            <div class="admin-card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>{{ order.address_full_name }}</strong></p>
+                        <p class="mb-1 text-muted">{{ order.address_line1 }}</p>
+                        <p class="mb-1 text-muted">{{ order.address_city }}, {{ order.address_state }} — {{ order.address_pincode }}</p>
+                        <p class="mb-0"><i class="bi bi-telephone me-1"></i>{{ order.address_phone }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar: Customer + Status -->
+    <div class="col-lg-4">
+        <!-- Customer Info -->
+        <div class="admin-card mb-4">
+            <div class="admin-card-header">
+                <h5 class="mb-0"><i class="bi bi-person me-2"></i>Customer</h5>
+            </div>
+            <div class="admin-card-body">
+                <p class="mb-1 fw-semibold">{{ order.customer.get_full_name }}</p>
+                <p class="mb-1 text-muted"><i class="bi bi-envelope me-1"></i>{{ order.customer.email }}</p>
+                {% if order.customer.profile.phone %}
+                <p class="mb-0 text-muted"><i class="bi bi-telephone me-1"></i>{{ order.customer.profile.phone }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Update Status -->
+        <div class="admin-card mb-4">
+            <div class="admin-card-header">
+                <h5 class="mb-0"><i class="bi bi-arrow-repeat me-2"></i>Update Status</h5>
+            </div>
+            <div class="admin-card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    <select name="status" class="form-select mb-3">
+                        {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-primary-custom w-100">
+                        <i class="bi bi-check-lg me-1"></i>Update Status
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Payment Info -->
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5 class="mb-0"><i class="bi bi-credit-card me-2"></i>Payment</h5>
+            </div>
+            <div class="admin-card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Status</span>
+                    <span class="admin-status-badge status-{{ order.payment_status }}">{{ order.get_payment_status_display }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Amount</span>
+                    <span class="fw-bold">₹{{ order.total_amount }}</span>
+                </div>
+                {% if order.razorpay_order_id %}
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Razorpay ID</span>
+                    <span class="small" style="word-break: break-all;">{{ order.razorpay_order_id }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

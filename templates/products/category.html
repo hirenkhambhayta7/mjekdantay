@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load product_tags %}
+
+{% block title %}{{ category.name }} — MJ Ekdantay Masala Centre{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav class="breadcrumb-custom">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'products:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'products:shop' %}">Shop</a></li>
+            <li class="breadcrumb-item active">{{ category.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="mb-4">
+        <h2 class="section-title">{{ category.name }}</h2>
+        <p class="text-muted">{{ category.description }}</p>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <p class="text-muted mb-0">{{ products|length }} product{{ products|length|pluralize }}</p>
+        <form method="GET">
+            <select class="form-select form-select-sm" name="sort" onchange="this.form.submit();" style="width: auto;">
+                <option value="">Default</option>
+                <option value="price_low" {% if sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+            </select>
+        </form>
+    </div>
+
+    {% if products %}
+    <div class="row g-4">
+        {% for product in products %}
+        <div class="col-lg-3 col-md-4 col-6">
+            <div class="product-card">
+                <a href="{{ product.get_absolute_url }}">
+                    <div class="product-image-wrapper">
+                        {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                        {% else %}
+                        <div class="placeholder-image">🌿</div>
+                        {% endif %}
+                    </div>
+                </a>
+                <div class="product-info">
+                    <h6 class="product-name">
+                        <a href="{{ product.get_absolute_url }}">{{ product.name }}</a>
+                    </h6>
+                    <div class="variant-pills">
+                        {% for variant in product.variants.all %}
+                        <span class="variant-pill card-variant-pill {% if forloop.first %}active{% endif %}"
+                              data-price="{{ variant.price }}"
+                              data-variant-id="{{ variant.id }}">{{ variant.weight_label }}</span>
+                        {% endfor %}
+                    </div>
+                    {% with product.default_variant as dv %}
+                    {% if dv %}
+                    <div class="product-price">
+                        <span class="card-price-value">₹{{ dv.price }}</span>
+                    </div>
+                    <form class="add-to-cart-form" action="{% url 'orders:add_to_cart' %}" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="variant_id" class="card-variant-input" value="{{ dv.id }}">
+                        <input type="hidden" name="quantity" value="1">
+                        <button type="submit" class="btn-cart">
+                            <i class="bi bi-bag-plus me-1"></i>Add to Cart
+                        </button>
+                    </form>
+                    {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📦</div>
+        <h4>No products yet</h4>
+        <p>We're adding more products to this category soon!</p>
+        <a href="{% url 'products:shop' %}" class="btn btn-primary-custom">Browse All Products</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

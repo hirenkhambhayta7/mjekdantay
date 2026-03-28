@@ -1,0 +1,147 @@
+{% extends 'store_admin/base_admin.html' %}
+
+{% block title %}Products{% endblock %}
+
+{% block content %}
+<div class="admin-page-header d-flex justify-content-between align-items-start flex-wrap gap-3">
+    <div>
+        <h1 class="admin-page-title">Products</h1>
+        <p class="admin-page-subtitle">Manage your product catalog and stock levels</p>
+    </div>
+    <a href="{% url 'store_admin:product_add' %}" class="btn btn-primary-custom">
+        <i class="bi bi-plus-lg me-1"></i>Add Product
+    </a>
+</div>
+
+<!-- Filters -->
+<div class="admin-card mb-4">
+    <div class="admin-card-body">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold">Search</label>
+                <input type="text" name="q" class="form-control" placeholder="Product name..." value="{{ search }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Category</label>
+                <select name="category" class="form-select">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.slug }}" {% if category_filter == cat.slug %}selected{% endif %}>{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary-custom w-100">
+                    <i class="bi bi-funnel me-1"></i>Filter
+                </button>
+            </div>
+            {% if search or category_filter %}
+            <div class="col-md-2">
+                <a href="{% url 'store_admin:products_list' %}" class="btn btn-outline-secondary w-100">Clear</a>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<!-- Products Table -->
+<div class="admin-card">
+    <div class="admin-card-body p-0">
+        <div class="table-responsive">
+            <table class="table admin-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Variants &amp; Stock</th>
+                        <th>Base Price</th>
+                        <th>Active</th>
+                        <th>Featured</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                {% if product.image %}
+                                <img src="{{ product.image.url }}" alt="" class="admin-product-thumb">
+                                {% else %}
+                                <div class="admin-product-thumb-placeholder">
+                                    <i class="bi bi-image"></i>
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <span class="fw-semibold d-block">{{ product.name }}</span>
+                                    <small class="text-muted">{{ product.slug }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="badge bg-secondary">{{ product.category.name }}</span></td>
+                        <td>
+                            {% for v in product.variants.all %}
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="small">{{ v.weight_label }} — ₹{{ v.price }}</span>
+                                {% if v.stock_quantity == 0 %}
+                                <span class="badge bg-danger">OUT</span>
+                                {% elif v.stock_quantity < 10 %}
+                                <span class="badge bg-warning text-dark">{{ v.stock_quantity }} left</span>
+                                {% else %}
+                                <span class="badge bg-success">{{ v.stock_quantity }}</span>
+                                {% endif %}
+                            </div>
+                            {% empty %}
+                            <span class="text-muted small">No variants</span>
+                            {% endfor %}
+                        </td>
+                        <td class="fw-semibold">₹{{ product.base_price }}</td>
+                        <td>
+                            <form method="POST" action="{% url 'store_admin:product_toggle' product.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="field" value="is_active">
+                                <button type="submit" class="btn btn-sm {% if product.is_active %}btn-success{% else %}btn-outline-secondary{% endif %}" title="Toggle Active">
+                                    <i class="bi {% if product.is_active %}bi-check-lg{% else %}bi-x-lg{% endif %}"></i>
+                                </button>
+                            </form>
+                        </td>
+                        <td>
+                            <form method="POST" action="{% url 'store_admin:product_toggle' product.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="field" value="is_featured">
+                                <button type="submit" class="btn btn-sm {% if product.is_featured %}btn-warning{% else %}btn-outline-secondary{% endif %}" title="Toggle Featured">
+                                    <i class="bi {% if product.is_featured %}bi-star-fill{% else %}bi-star{% endif %}"></i>
+                                </button>
+                            </form>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <a href="{% url 'store_admin:product_edit' product.id %}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form method="POST" action="{% url 'store_admin:product_delete' product.id %}" class="d-inline" onsubmit="return confirm('Delete {{ product.name }}?')">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="bi bi-box-seam fs-1 d-block mb-2"></i>
+                                No products found.
+                                <a href="{% url 'store_admin:product_add' %}">Add your first product</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

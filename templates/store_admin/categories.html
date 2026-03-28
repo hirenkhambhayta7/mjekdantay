@@ -1,0 +1,144 @@
+{% extends 'store_admin/base_admin.html' %}
+
+{% block title %}Categories{% endblock %}
+
+{% block content %}
+<div class="admin-page-header">
+    <h1 class="admin-page-title">Categories</h1>
+    <p class="admin-page-subtitle">Manage product categories</p>
+</div>
+
+<div class="row g-4">
+    <!-- Categories List -->
+    <div class="col-lg-7">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5 class="mb-0"><i class="bi bi-tags me-2"></i>All Categories</h5>
+            </div>
+            <div class="admin-card-body p-0">
+                <div class="table-responsive">
+                    <table class="table admin-table mb-0">
+                        <thead>
+                            <tr><th>Name</th><th>Slug</th><th>Products</th><th></th></tr>
+                        </thead>
+                        <tbody>
+                            {% for cat in categories %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        {% if cat.image %}
+                                        <img src="{{ cat.image.url }}" alt="" class="admin-product-thumb" style="width: 36px; height: 36px;">
+                                        {% else %}
+                                        <div class="admin-product-thumb-placeholder" style="width: 36px; height: 36px; font-size: 0.9rem;">
+                                            <i class="bi bi-tag"></i>
+                                        </div>
+                                        {% endif %}
+                                        <span class="fw-semibold">{{ cat.name }}</span>
+                                    </div>
+                                </td>
+                                <td class="text-muted small">{{ cat.slug }}</td>
+                                <td><span class="badge bg-secondary">{{ cat.product_count }}</span></td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <a href="?edit={{ cat.id }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form method="POST" class="d-inline" onsubmit="return confirm('Delete {{ cat.name }}? Products in this category will also be deleted.')">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="category_id" value="{{ cat.id }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">
+                                    <i class="bi bi-tags fs-1 d-block mb-2"></i>
+                                    No categories yet. Add one from the form.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add / Edit Form -->
+    <div class="col-lg-5">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-{% if edit_category %}pencil{% else %}plus-circle{% endif %} me-2"></i>
+                    {% if edit_category %}Edit: {{ edit_category.name }}{% else %}Add Category{% endif %}
+                </h5>
+            </div>
+            <div class="admin-card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {% if edit_category %}
+                    <input type="hidden" name="action" value="edit">
+                    <input type="hidden" name="category_id" value="{{ edit_category.id }}">
+                    {% else %}
+                    <input type="hidden" name="action" value="add">
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Name</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Slug</label>
+                        {{ form.slug }}
+                        {% if form.slug.errors %}<div class="text-danger small mt-1">{{ form.slug.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Description</label>
+                        {{ form.description }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Image</label>
+                        {% if edit_category and edit_category.image %}
+                        <div class="mb-2">
+                            <img src="{{ edit_category.image.url }}" alt="" class="img-fluid rounded" style="max-height: 100px;">
+                        </div>
+                        {% endif %}
+                        {{ form.image }}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-custom w-100">
+                        <i class="bi bi-check-lg me-1"></i>{% if edit_category %}Update{% else %}Add{% endif %} Category
+                    </button>
+
+                    {% if edit_category %}
+                    <a href="{% url 'store_admin:categories' %}" class="btn btn-outline-secondary w-100 mt-2">Cancel</a>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-generate slug from name
+const nameInput = document.querySelector('#id_name');
+const slugInput = document.querySelector('#id_slug');
+if (nameInput && slugInput && !slugInput.value) {
+    nameInput.addEventListener('input', function() {
+        slugInput.value = this.value
+            .toLowerCase()
+            .replace(/[^\w\s-]/g, '')
+            .replace(/[\s_]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load product_tags %}
+
+{% block title %}MJ Ekdantay Masala Centre — Pure Spices, Rich Flavour{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <div class="hero-badge">🌿 Premium Quality Since Generations</div>
+                <h1>MJ Ekdantay<br>Masala Centre</h1>
+                <p class="tagline">Pure Spices, Rich Flavour — Handpicked and freshly ground spices that bring authentic taste to every dish.</p>
+                <div class="d-flex gap-3 flex-wrap" style="position:relative;z-index:1;">
+                    <a href="{% url 'products:shop' %}" class="btn btn-primary-custom btn-lg">
+                        <i class="bi bi-bag me-2"></i>Shop Now
+                    </a>
+                    <a href="#categories" class="btn btn-outline-custom btn-lg" style="border-color: rgba(255,255,255,0.4); color: white;">
+                        <i class="bi bi-grid me-2"></i>Browse Categories
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-5 text-center" style="position: relative; z-index: 1;">
+                <div class="d-none d-lg-block" style="font-size: 10rem; opacity: 0.3;">🌶️</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Products -->
+{% if featured_products %}
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-4">
+            <h2 class="section-title">Featured Products</h2>
+            <div class="section-title-bar"></div>
+            <p class="section-subtitle">Our most popular and loved spices</p>
+        </div>
+        <div class="row g-4">
+            {% for product in featured_products %}
+            <div class="col-lg-3 col-md-4 col-6">
+                <div class="product-card">
+                    <a href="{{ product.get_absolute_url }}">
+                        <div class="product-image-wrapper">
+                            <span class="category-tag">{{ product.category.name }}</span>
+                            {% if product.image %}
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                            {% else %}
+                            <div class="placeholder-image">🌿</div>
+                            {% endif %}
+                        </div>
+                    </a>
+                    <div class="product-info">
+                        <h6 class="product-name">
+                            <a href="{{ product.get_absolute_url }}">{{ product.name }}</a>
+                        </h6>
+                        <div class="variant-pills">
+                            {% for variant in product.variants.all %}
+                            <span class="variant-pill card-variant-pill {% if forloop.first %}active{% endif %}"
+                                  data-price="{{ variant.price }}"
+                                  data-variant-id="{{ variant.id }}">{{ variant.weight_label }}</span>
+                            {% endfor %}
+                        </div>
+                        {% with product.default_variant as dv %}
+                        <div class="product-price">
+                            <span class="card-price-value">₹{{ dv.price }}</span>
+                            <small>onwards</small>
+                        </div>
+                        <form class="add-to-cart-form" action="{% url 'orders:add_to_cart' %}" method="POST">
+                            {% csrf_token %}
+                            <input type="hidden" name="variant_id" class="card-variant-input" value="{{ dv.id }}">
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="btn-cart">
+                                <i class="bi bi-bag-plus me-1"></i>Add to Cart
+                            </button>
+                        </form>
+                        {% endwith %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-4">
+            <a href="{% url 'products:shop' %}" class="btn btn-outline-custom">
+                View All Products <i class="bi bi-arrow-right ms-2"></i>
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Categories -->
+<section class="py-5" id="categories" style="background: var(--white);">
+    <div class="container">
+        <div class="text-center mb-4">
+            <h2 class="section-title">Shop by Category</h2>
+            <div class="section-title-bar"></div>
+            <p class="section-subtitle">Find exactly what you're looking for</p>
+        </div>
+        <div class="row g-4">
+            {% for category in categories %}
+            <div class="col-lg-3 col-md-6">
+                <a href="{{ category.get_absolute_url }}" style="text-decoration:none; color:inherit;">
+                    <div class="category-card">
+                        <div class="category-icon">
+                            {% if category.slug == 'whole-spices' %}🌿{% elif category.slug == 'blended-masala' %}🌶️{% elif category.slug == 'special-masala' %}⭐{% elif category.slug == 'dry-fruits-seeds' %}🥜{% else %}🧂{% endif %}
+                        </div>
+                        <h5>{{ category.name }}</h5>
+                        <p>{{ category.description|truncatewords:12 }}</p>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <div class="about-section">
+                    <h2 class="section-title mb-3">About MJ Ekdantay Masala Centre</h2>
+                    <div class="section-title-bar" style="margin: 0 0 1.5rem;"></div>
+                    <p class="text-muted mb-3">
+                        MJ Ekdantay Masala Centre is a trusted name in premium Indian spices. Our family has been in the spice business for generations, bringing the purest and most flavourful masalas to kitchens across India.
+                    </p>
+                    <p class="text-muted mb-4">
+                        Every spice is handpicked, sun-dried, and freshly ground to preserve its natural oils, colour, and aroma. We believe that great food starts with great spices — and we're committed to delivering nothing less than the best.
+                    </p>
+                    <div class="row g-3">
+                        <div class="col-4 text-center">
+                            <h3 class="fw-bold" style="color: var(--primary);">50+</h3>
+                            <small class="text-muted">Products</small>
+                        </div>
+                        <div class="col-4 text-center">
+                            <h3 class="fw-bold" style="color: var(--primary);">10K+</h3>
+                            <small class="text-muted">Happy Customers</small>
+                        </div>
+                        <div class="col-4 text-center">
+                            <h3 class="fw-bold" style="color: var(--primary);">100%</h3>
+                            <small class="text-muted">Pure & Natural</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center">
+                <div style="font-size: 8rem; opacity: 0.6;">🫙</div>
+                <p class="text-muted mt-2"><em>"The secret to great cooking is great masala."</em></p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

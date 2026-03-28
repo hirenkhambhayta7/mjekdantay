@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load product_tags %}
+
+{% block title %}Shopping Cart — MJ Ekdantay Masala Centre{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav class="breadcrumb-custom">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'products:home' %}">Home</a></li>
+            <li class="breadcrumb-item active">Shopping Cart</li>
+        </ol>
+    </nav>
+
+    <h2 class="section-title mb-4"><i class="bi bi-bag me-2"></i>Shopping Cart</h2>
+
+    {% if items %}
+    <div class="row g-4">
+        <!-- Cart Items -->
+        <div class="col-lg-8">
+            <div class="cart-table">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Total</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr id="cart-row-{{ item.id }}">
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    {% if item.product_variant.product.image %}
+                                    <img src="{{ item.product_variant.product.image.url }}" class="cart-product-img" alt="{{ item.product_variant.product.name }}">
+                                    {% else %}
+                                    <div class="cart-product-img d-flex align-items-center justify-content-center" style="background: var(--cream); border-radius: var(--radius);">🌿</div>
+                                    {% endif %}
+                                    <div>
+                                        <a href="{{ item.product_variant.product.get_absolute_url }}" class="fw-semibold text-dark">{{ item.product_variant.product.name }}</a>
+                                        <div class="text-muted small">{{ item.product_variant.weight_label }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="fw-semibold">₹{{ item.product_variant.price }}</td>
+                            <td>
+                                <div class="qty-input-group">
+                                    <button type="button" class="btn-qty cart-qty-btn" data-item-id="{{ item.id }}" data-action="decrease">−</button>
+                                    <span id="qty-{{ item.id }}" style="width:50px; height:40px; border:2px solid var(--gray-200); border-left:none; border-right:none; display:flex; align-items:center; justify-content:center; font-weight:600;">{{ item.quantity }}</span>
+                                    <button type="button" class="btn-qty cart-qty-btn" data-item-id="{{ item.id }}" data-action="increase">+</button>
+                                </div>
+                            </td>
+                            <td class="fw-bold" id="line-total-{{ item.id }}">₹{{ item.line_total }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-link text-danger cart-remove-btn" data-item-id="{{ item.id }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-3">
+                <a href="{% url 'products:shop' %}" class="btn btn-outline-custom">
+                    <i class="bi bi-arrow-left me-2"></i>Continue Shopping
+                </a>
+            </div>
+        </div>
+
+        <!-- Cart Summary -->
+        <div class="col-lg-4">
+            <div class="cart-summary">
+                <h5><i class="bi bi-receipt me-2"></i>Order Summary</h5>
+                {% if cart.delivery_charge == 0 %}
+                <div class="free-delivery">
+                    <i class="bi bi-truck me-1"></i> Free delivery on orders above ₹499!
+                </div>
+                {% else %}
+                <div class="free-delivery" style="background: #FFF3E0; color: #E65100;">
+                    <i class="bi bi-truck me-1"></i> Add ₹{{ cart.subtotal|floatformat:0 }}+ to get free delivery!
+                </div>
+                {% endif %}
+                <div class="summary-row">
+                    <span>Subtotal ({{ cart.total_items }} items)</span>
+                    <span id="cart-subtotal">₹{{ cart.subtotal }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Delivery</span>
+                    <span id="cart-delivery">{% if cart.delivery_charge > 0 %}₹{{ cart.delivery_charge }}{% else %}FREE{% endif %}</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Grand Total</span>
+                    <span id="cart-grand-total">₹{{ cart.grand_total }}</span>
+                </div>
+                <a href="{% url 'orders:checkout' %}" class="btn btn-primary-custom w-100 mt-3">
+                    <i class="bi bi-shield-lock me-2"></i>Proceed to Checkout
+                </a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">🛒</div>
+        <h4>Your cart is empty</h4>
+        <p>Looks like you haven't added any spices yet. Let's fix that!</p>
+        <a href="{% url 'products:shop' %}" class="btn btn-primary-custom">
+            <i class="bi bi-bag me-2"></i>Start Shopping
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
