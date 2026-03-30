@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from django.contrib.auth import get_user_model
 
 load_dotenv()
 
@@ -152,3 +153,14 @@ DEFAULT_FROM_EMAIL = 'MJ Ekdantay Masala Centre <noreply@mjmasala.com>'
 
 # Session
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+
+
+
+if os.environ.get("CREATE_SUPERUSER") == "True":
+    User = get_user_model()
+    if not User.objects.filter(username=os.environ.get("DJANGO_SUPERUSER_USERNAME")).exists():
+        User.objects.create_superuser(
+            os.environ.get("DJANGO_SUPERUSER_USERNAME"),
+            os.environ.get("DJANGO_SUPERUSER_EMAIL"),
+            os.environ.get("DJANGO_SUPERUSER_PASSWORD")
+        )
