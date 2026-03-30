@@ -156,11 +156,15 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 
 
+
+
 if os.environ.get("CREATE_SUPERUSER") == "True":
     User = get_user_model()
-    if not User.objects.filter(username=os.environ.get("DJANGO_SUPERUSER_USERNAME")).exists():
-        User.objects.create_superuser(
-            os.environ.get("DJANGO_SUPERUSER_USERNAME"),
-            os.environ.get("DJANGO_SUPERUSER_EMAIL"),
-            os.environ.get("DJANGO_SUPERUSER_PASSWORD")
-        )
+
+    User.objects.filter(username=os.environ.get("DJANGO_SUPERUSER_USERNAME")).delete()
+
+    User.objects.create_superuser(
+        os.environ.get("DJANGO_SUPERUSER_USERNAME"),
+        os.environ.get("DJANGO_SUPERUSER_EMAIL"),
+        os.environ.get("DJANGO_SUPERUSER_PASSWORD")
+    )
