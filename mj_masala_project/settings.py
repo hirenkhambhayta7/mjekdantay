@@ -8,7 +8,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dev-key-change-in-production')
 DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 'yes')
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = [
+    h.strip() for h in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()
+]
+if DEBUG:
+    for _ngrok in ('.ngrok-free.app', '.ngrok.io'):
+        if _ngrok not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(_ngrok)
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    USE_X_FORWARDED_HOST = True
+
+CSRF_TRUSTED_ORIGINS = [
+    o.strip() for o in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if o.strip()
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
